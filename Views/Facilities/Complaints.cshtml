@@ -1,0 +1,119 @@
+@model ComplaintsViewModel
+@{
+    ViewData["Title"] = Model.ActiveOnly ? "Update Status" : "Complaints";
+    var isEmptyFilter = string.IsNullOrWhiteSpace(Model.Search) && !Model.Status.HasValue && !Model.Priority.HasValue && !Model.CategoryId.HasValue && !Model.Unassigned;
+}
+
+<div class="page-head">
+    <div>
+        <h1>@(Model.ActiveOnly ? "Update Status" : "Complaints")</h1>
+        <p>
+            @(Model.ActiveOnly
+                ? "Open reports, most urgent first. Choose Update to change a status."
+                : "Every report submitted on campus.")
+        </p>
+    </div>
+</div>
+
+<form method="get" asp-action="Complaints" class="filter-bar card-app">
+    <input type="hidden" name="q" value="@Model.Search" />
+    @if (Model.ActiveOnly)
+    {
+        <input type="hidden" name="active" value="true" />
+    }
+
+    <div>
+        <label class="form-label small" for="fStatus">Status</label>
+        <select id="fStatus" name="status" class="form-select form-select-sm">
+            <option value="">Any status</option>
+            @foreach (var s in Enum.GetValues<ReportStatus>())
+            {
+                <option value="@s" selected="@(Model.Status == s)">@s.Label()</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label small" for="fPriority">Priority</label>
+        <select id="fPriority" name="priority" class="form-select form-select-sm">
+            <option value="">Any priority</option>
+            @foreach (var p in Enum.GetValues<ReportPriority>().Reverse())
+            {
+                <option value="@p" selected="@(Model.Priority == p)">@p.Label()</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label small" for="fCategory">Incident type</label>
+        <select id="fCategory" name="categoryId" class="form-select form-select-sm">
+            <option value="">Any type</option>
+            @foreach (var c in Model.Categories)
+            {
+                <option value="@c.Value" selected="@(Model.CategoryId?.ToString() == c.Value)">@c.Text</option>
+            }
+        </select>
+    </div>
+    <div class="form-check filter-check">
+        <input class="form-check-input" type="checkbox" id="fUnassigned" name="unassigned" value="true" checked="@Model.Unassigned" />
+        <label class="form-check-label" for="fUnassigned">Unassigned only</label>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+        @if (!isEmptyFilter)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="Complaints" asp-route-active="@(Model.ActiveOnly ? "true" : null)">Clear</a>
+        }
+    </div>
+</form>
+
+<section class="card-app mt-3">
+    @if (Model.Reports.Count == 0)
+    {
+        <div class="empty-state">
+            <span class="empty-icon"><svg class="icon"><use href="#i-clipboard" /></svg></span>
+            <h2 class="h5">No reports found</h2>
+            <p class="muted mb-0">Try clearing the filters or searching for a different reference number.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-app align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Ref #</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Reported by</th>
+                        <th scope="col">Priority</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Assigned to</th>
+                        <th scope="col">Date</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Reports)
+                    {
+                        <tr>
+                            <td><a asp-controller="Reports" asp-action="Details" asp-route-id="@r.Id" class="link-strong">@r.ReferenceNumber</a></td>
+                            <td>@r.Category.Name</td>
+                            <td>@r.Location.Building<br /><small class="muted">@r.Location.Campus</small></td>
+                            <td class="text-nowrap">@r.Reporter.DisplayName</td>
+                            <td><partial name="_PriorityBadge" model="r.Priority" /></td>
+                            <td><partial name="_StatusBadge" model="r.Status" /></td>
+                            <td class="text-nowrap">@(r.AssignedTo?.DisplayName ?? "-")</td>
+                            <td class="text-nowrap">@r.CreatedAt.Sast("dd MMM yyyy")</td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="Reports" asp-action="Details" asp-route-id="@r.Id">Open</a>
+                                @if (r.Status.IsActive() || r.Status == ReportStatus.Resolved)
+                                {
+                                    <a class="btn btn-sm btn-primary" asp-controller="Reports" asp-action="Details" asp-route-id="@r.Id" asp-route-update="true">Update</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

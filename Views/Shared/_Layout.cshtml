@@ -1,0 +1,143 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var nav = ViewData["Nav"] as string ?? string.Empty;
+    var authed = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole(Roles.Administrator);
+    var isCoordinator = User.IsInRole(Roles.Coordinator);
+    var isManager = isAdmin || isCoordinator;
+    var isTechnician = !isManager && User.IsInRole(Roles.Technician);
+
+    var me = authed ? await UserManager.GetUserAsync(User) : null;
+    var displayName = me?.DisplayName ?? "Guest";
+    var roleLabel = isAdmin ? "Administrator" : isCoordinator ? "Coordinator" : isTechnician ? "Technician" : "Reporter";
+
+    var items = new List<(string Key, string Label, string Icon, string Href)>();
+    if (isManager)
+    {
+        items.Add(("dashboard", "Dashboard", "grid", Url.Action("Index", "Facilities")!));
+        items.Add(("complaints", "Complaints", "clipboard", Url.Action("Complaints", "Facilities")!));
+        items.Add(("update", "Update Status", "edit", Url.Action("Complaints", "Facilities", new { active = true })!));
+        items.Add(("analytics", "Reports & Analytics", "bar-chart", Url.Action("Analytics", "Facilities")!));
+        if (isAdmin)
+        {
+            items.Add(("users", "Manage Users", "users", Url.Action("Users", "Admin")!));
+        }
+    }
+    else if (isTechnician)
+    {
+        items.Add(("assigned", "Assigned Work", "clipboard", Url.Action("Assigned", "Facilities")!));
+        items.Add(("report", "Report Incident", "plus-circle", Url.Action("Create", "Reports")!));
+        items.Add(("my", "My Reports", "file-text", Url.Action("My", "Reports")!));
+    }
+    else
+    {
+        items.Add(("home", "Home", "home", Url.Action("Index", "Home")!));
+        items.Add(("report", "Report Incident", "plus-circle", Url.Action("Create", "Reports")!));
+        items.Add(("my", "My Reports", "file-text", Url.Action("My", "Reports")!));
+        items.Add(("track", "Track Progress", "target", Url.Action("Track", "Reports")!));
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CMRP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <partial name="_Icons" />
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div class="app-shell">
+        <div class="sidebar-backdrop" data-sidebar-close></div>
+
+        <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+            <a class="brand" href="/">
+                <span class="brand-mark"><svg class="icon"><use href="#i-tool" /></svg></span>
+                <span class="brand-text"><strong>CMRP</strong><small>UKZN Campus Maintenance</small></span>
+            </a>
+
+            @if (authed)
+            {
+                <nav class="sidebar-nav">
+                    @foreach (var item in items)
+                    {
+                        <a class="nav-item-app @(nav == item.Key ? "active" : "")" href="@item.Href" aria-current="@(nav == item.Key ? "page" : null)">
+                            <svg class="icon"><use href="#i-@item.Icon" /></svg><span>@item.Label</span>
+                        </a>
+                    }
+                </nav>
+
+                <div class="sidebar-footer">
+                    <a class="nav-item-app @(nav == "profile" ? "active" : "")" asp-controller="Account" asp-action="Profile">
+                        <svg class="icon"><use href="#i-user" /></svg><span>Profile</span>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="nav-item-app">
+                            <svg class="icon"><use href="#i-log-out" /></svg><span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            }
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar">
+                <button type="button" class="icon-btn menu-btn" data-sidebar-open aria-label="Open menu" aria-controls="sidebar">
+                    <svg class="icon"><use href="#i-menu" /></svg>
+                </button>
+
+                @if (authed && isManager)
+                {
+                    <form class="topbar-search" method="get" asp-controller="Facilities" asp-action="Complaints" role="search">
+                        <svg class="icon"><use href="#i-search" /></svg>
+                        <input type="search" name="q" value="@Context.Request.Query["q"].ToString()" placeholder="Search incidents, reference numbers..." aria-label="Search incidents and reference numbers" />
+                    </form>
+                }
+                else
+                {
+                    <div class="topbar-spacer"></div>
+                }
+
+                @if (authed)
+                {
+                    <div class="user-chip">
+                        <span class="avatar" aria-hidden="true">@DisplayExtensions.Initials(displayName)</span>
+                        <span class="user-meta"><strong>@displayName</strong><small>@roleLabel</small></span>
+                    </div>
+                }
+            </header>
+
+            <main id="main" class="app-content">
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="status">
+                        @success
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @error
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

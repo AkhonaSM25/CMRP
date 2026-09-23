@@ -1,0 +1,100 @@
+@model UsersViewModel
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Manage Users</h1>
+        <p>Create staff accounts, change roles and deactivate accounts.</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newUser" aria-expanded="false" aria-controls="newUser">
+        <svg class="icon"><use href="#i-plus-circle" /></svg> New account
+    </button>
+</div>
+
+<section id="newUser" class="card-app collapse mb-3">
+    <h2 class="card-title">New account</h2>
+    <form asp-action="CreateUser" method="post" class="row g-3" data-submit-lock>
+        <div class="col-md-6">
+            <label class="form-label" for="FullName">Full name</label>
+            <input id="FullName" name="FullName" class="form-control" maxlength="100" required />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="Email">Email address</label>
+            <input id="Email" name="Email" type="email" class="form-control" required />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="Password">Temporary password</label>
+            <input id="Password" name="Password" type="password" class="form-control" minlength="6" autocomplete="new-password" required />
+            <div class="form-text">At least 6 characters, with upper and lower case letters, a number and a symbol.</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="Role">Role</label>
+            <select id="Role" name="Role" class="form-select" required>
+                <option value="">Select role</option>
+                @foreach (var role in Model.RoleNames)
+                {
+                    <option value="@role">@role</option>
+                }
+            </select>
+        </div>
+        <div class="col-12"><button type="submit" class="btn btn-primary">Create account</button></div>
+    </form>
+</section>
+
+<section class="card-app">
+    <div class="table-responsive">
+        <table class="table table-app align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Users)
+                {
+                    <tr>
+                        <td>
+                            <strong>@u.Name</strong>
+                            @if (u.IsCurrentUser) { <span class="pill pill-internal">You</span> }
+                        </td>
+                        <td>@u.Email</td>
+                        <td>
+                            <form asp-action="ChangeRole" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <select name="role" class="form-select form-select-sm" aria-label="Role for @u.Name" disabled="@u.IsCurrentUser">
+                                    @foreach (var role in Model.RoleNames)
+                                    {
+                                        <option value="@role" selected="@(role == u.Role)">@role</option>
+                                    }
+                                </select>
+                                @if (!u.IsCurrentUser)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
+                                }
+                            </form>
+                        </td>
+                        <td>
+                            @if (u.IsActive) { <span class="pill st-resolved">Active</span> }
+                            else { <span class="pill st-cancelled">Deactivated</span> }
+                        </td>
+                        <td class="text-end">
+                            @if (!u.IsCurrentUser)
+                            {
+                                <form asp-action="ToggleActive" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@u.Id" />
+                                    <button type="submit" class="btn btn-sm @(u.IsActive ? "btn-outline-danger" : "btn-outline-secondary")">@(u.IsActive ? "Deactivate" : "Reactivate")</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

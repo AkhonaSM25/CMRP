@@ -1,0 +1,102 @@
+@model CreateReportViewModel
+@{
+    ViewData["Title"] = "Report Incident";
+    var campuses = Model.Locations.Select(l => l.Campus).Distinct().OrderBy(c => c == "Other").ThenBy(c => c).ToList();
+    var selectedCampus = Model.Locations.FirstOrDefault(l => l.Id == Model.LocationId)?.Campus;
+}
+
+<div class="page-head">
+    <div>
+        <h1>Report Incident</h1>
+        <p>Please provide as much detail as possible about the incident.</p>
+    </div>
+</div>
+
+<div class="notice notice-warn notice-narrow" role="note">
+    <svg class="icon"><use href="#i-alert" /></svg>
+    <div>
+        <strong>Is anyone in danger?</strong>
+        CMRP is for maintenance issues and is not monitored around the clock. For a life-threatening emergency, contact
+        campus protection services or emergency services directly.
+    </div>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="card-app form-card" data-submit-lock>
+    <div asp-validation-summary="ModelOnly" class="form-error" role="alert"></div>
+
+    <div class="mb-4">
+        <label asp-for="CategoryId" class="form-label">Incident type</label>
+        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+            <option value="">Select type</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="field-error"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="4" maxlength="500" data-counter="#descCounter"
+                  placeholder="Provide a detailed description of the incident..."></textarea>
+        <div class="d-flex justify-content-between">
+            <span asp-validation-for="Description" class="field-error"></span>
+            <small class="muted ms-auto" id="descCounter" aria-live="polite">0/500</small>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label" for="Photo">Add a photo (optional)</label>
+        <div class="dropzone" data-dropzone>
+            <input asp-for="Photo" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="dropzone-input" />
+            <div class="dropzone-empty">
+                <svg class="icon"><use href="#i-upload" /></svg>
+                <span>Click to upload or drag and drop</span>
+                <small>PNG, JPG (max 5MB)</small>
+            </div>
+            <div class="dropzone-file" hidden>
+                <img alt="Preview of the selected photo" class="dropzone-preview" />
+                <span class="dropzone-name"></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-dropzone-clear>Remove</button>
+            </div>
+        </div>
+        <span asp-validation-for="Photo" class="field-error"></span>
+        <div class="field-error" data-dropzone-error role="alert"></div>
+    </div>
+
+    <fieldset class="mb-4">
+        <legend class="form-label">Location</legend>
+        <div class="row g-3">
+            <div class="col-sm-6">
+                <label class="form-label small" for="campusSelect">Campus</label>
+                <select id="campusSelect" class="form-select" data-campus-select>
+                    <option value="">Select campus</option>
+                    @foreach (var c in campuses)
+                    {
+                        <option value="@c" selected="@(c == selectedCampus)">@c</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6">
+                <label class="form-label small" asp-for="LocationId">Building / Area</label>
+                <select asp-for="LocationId" class="form-select" data-area-select>
+                    <option value="">Select building/area</option>
+                    @foreach (var l in Model.Locations)
+                    {
+                        <option value="@l.Id" data-campus="@l.Campus">@l.Building</option>
+                    }
+                </select>
+                <span asp-validation-for="LocationId" class="field-error"></span>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="mb-4">
+        <label asp-for="LocationDetail" class="form-label small">More specific location (optional)</label>
+        <input asp-for="LocationDetail" class="form-control" maxlength="150" placeholder="e.g. room number, near library, etc." />
+        <span asp-validation-for="LocationDetail" class="field-error"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">Submit Report</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

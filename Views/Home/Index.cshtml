@@ -1,0 +1,59 @@
+@model ReporterHomeViewModel
+@{
+    ViewData["Title"] = "Home";
+    ViewData["Nav"] = "home";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Hello, @Model.FirstName</h1>
+        <p>Report a problem on campus and follow it until it is fixed.</p>
+    </div>
+    <a class="btn btn-primary" asp-controller="Reports" asp-action="Create">
+        <svg class="icon"><use href="#i-plus-circle" /></svg> Report an incident
+    </a>
+</div>
+
+<div class="stat-grid stat-grid-3">
+    <div class="stat-card">
+        <span class="stat-icon si-blue"><svg class="icon"><use href="#i-file-text" /></svg></span>
+        <div><div class="stat-label">Reports submitted</div><div class="stat-value">@Model.Total</div></div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon si-amber"><svg class="icon"><use href="#i-clock" /></svg></span>
+        <div><div class="stat-label">Still open</div><div class="stat-value">@Model.Open</div></div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon si-green"><svg class="icon"><use href="#i-check-circle" /></svg></span>
+        <div><div class="stat-label">Resolved</div><div class="stat-value">@Model.Resolved</div></div>
+    </div>
+</div>
+
+<section class="card-app mt-3">
+    <div class="card-head">
+        <h2 class="card-title">Your latest reports</h2>
+        @if (Model.Total > 0)
+        {
+            <a class="link-strong" asp-controller="Reports" asp-action="My">View all</a>
+        }
+    </div>
+
+    @if (Model.Recent.Count == 0)
+    {
+        <div class="empty-state">
+            <span class="empty-icon"><svg class="icon"><use href="#i-file-text" /></svg></span>
+            <h3 class="h5">You haven't reported anything yet</h3>
+            <p class="muted">Spotted a leak, a broken window or a fault? Tell the facilities team and track the fix here.</p>
+            <a class="btn btn-primary" asp-controller="Reports" asp-action="Create">Report an incident</a>
+        </div>
+    }
+    else
+    {
+        <div class="report-list">
+            @foreach (var r in Model.Recent)
+            {
+                <partial name="_ReportCard" model="@(new ReportCardModel(r))" />
+            }
+        </div>
+    }
+</section>

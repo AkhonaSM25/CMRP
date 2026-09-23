@@ -1,0 +1,67 @@
+@model RegisterViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Register";
+}
+
+<div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="muted">Registered users can report incidents and follow their progress.</p>
+
+    <div class="auth-tabs" role="navigation" aria-label="Sign in or register">
+        <a asp-action="Login">Login</a>
+        <a class="active" aria-current="page" asp-action="Register">Register</a>
+    </div>
+
+    <form asp-action="Register" method="post" data-submit-lock>
+        <div asp-validation-summary="ModelOnly" class="form-error" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label"></label>
+            <div class="input-icon">
+                <svg class="icon"><use href="#i-user" /></svg>
+                <input asp-for="FullName" class="form-control" placeholder="Enter your full name" autocomplete="name" autofocus />
+            </div>
+            <span asp-validation-for="FullName" class="field-error"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <div class="input-icon">
+                <svg class="icon"><use href="#i-mail" /></svg>
+                <input asp-for="Email" class="form-control" placeholder="Enter your email" autocomplete="username" />
+            </div>
+            <span asp-validation-for="Email" class="field-error"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label"></label>
+            <div class="input-icon">
+                <svg class="icon"><use href="#i-lock" /></svg>
+                <input asp-for="Password" class="form-control" placeholder="Choose a password" autocomplete="new-password" />
+                <button type="button" class="input-toggle" data-toggle-password="#Password" aria-label="Show password">
+                    <svg class="icon"><use href="#i-eye" /></svg>
+                </button>
+            </div>
+            <div class="form-text">At least 6 characters, with an uppercase letter, a lowercase letter, a number and a symbol.</div>
+            <span asp-validation-for="Password" class="field-error"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <div class="input-icon">
+                <svg class="icon"><use href="#i-lock" /></svg>
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat your password" autocomplete="new-password" />
+            </div>
+            <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Create account</button>
+    </form>
+
+    <p class="auth-foot">Already registered? <a asp-action="Login">Login here</a></p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

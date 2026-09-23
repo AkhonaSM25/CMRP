@@ -1,0 +1,18 @@
+@model List<ChartItem>
+@if (Model.Count == 0 || Model.All(i => i.Count == 0))
+{
+    <p class="muted mb-0">No data yet.</p>
+}
+else
+{
+    <ul class="bar-list">
+        @foreach (var item in Model)
+        {
+            <li class="bar-row">
+                <span class="bar-label">@item.Label</span>
+                <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:@item.WidthCss;background:@item.Color"></span></span>
+                <span class="bar-count">@item.Count</span>
+            </li>
+        }
+    </ul>
+}

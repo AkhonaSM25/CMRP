@@ -1,0 +1,79 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Reports & Analytics";
+    var maxTrend = Math.Max(1, Model.Trend.Count == 0 ? 1 : Model.Trend.Max(t => Math.Max(t.Created, t.Resolved)));
+}
+
+<div class="page-head">
+    <div>
+        <h1>Reports &amp; Analytics</h1>
+        <p>Trends across all reports. Use this to spot recurring problems and slow areas.</p>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <span class="stat-icon si-red"><svg class="icon"><use href="#i-alert" /></svg></span>
+        <div><div class="stat-label">Total Incidents</div><div class="stat-value">@Model.TotalIncidents</div></div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon si-amber"><svg class="icon"><use href="#i-clock" /></svg></span>
+        <div><div class="stat-label">Awaiting assignment</div><div class="stat-value">@Model.AwaitingAssignment</div></div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon si-green"><svg class="icon"><use href="#i-check-circle" /></svg></span>
+        <div><div class="stat-label">Resolved</div><div class="stat-value">@Model.Resolved</div></div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon si-purple"><svg class="icon"><use href="#i-target" /></svg></span>
+        <div><div class="stat-label">Average Fix Time</div><div class="stat-value">@(Model.AverageFixDays.HasValue ? Model.AverageFixDays.Value.ToString("0.#") + " days" : "-")</div></div>
+    </div>
+</div>
+
+<div class="chart-grid chart-grid-2">
+    <section class="card-app">
+        <h2 class="card-title">Reports per month</h2>
+        <div class="trend" role="img" aria-label="Reports created and resolved per month for the last six months">
+            @foreach (var t in Model.Trend)
+            {
+                <div class="trend-col">
+                    <div class="trend-bars">
+                        <span class="trend-bar created" style="height:@((t.Created * 100.0 / maxTrend).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%" title="@t.Created reported"></span>
+                        <span class="trend-bar resolved" style="height:@((t.Resolved * 100.0 / maxTrend).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%" title="@t.Resolved resolved"></span>
+                    </div>
+                    <div class="trend-label">@t.Label</div>
+                    <div class="trend-values">@t.Created / @t.Resolved</div>
+                </div>
+            }
+        </div>
+        <div class="legend legend-inline">
+            <span><span class="dot" style="background:#1466f5"></span> Reported</span>
+            <span><span class="dot" style="background:#22c55e"></span> Resolved</span>
+        </div>
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Average Time to Fix (Days)</h2>
+        <partial name="_FixTimeDonut" model="Model" />
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Reports by incident type</h2>
+        <partial name="_BarList" model="Model.AllCategories" />
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Reports by status</h2>
+        <partial name="_BarList" model="Model.ByStatus" />
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Reports by priority</h2>
+        <partial name="_BarList" model="Model.ByPriority" />
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Reports by campus</h2>
+        <partial name="_BarList" model="Model.ByCampus" />
+    </section>
+</div>

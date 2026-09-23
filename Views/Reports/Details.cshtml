@@ -1,0 +1,235 @@
+@model ReportDetailsViewModel
+@{
+    var r = Model.Report;
+    ViewData["Title"] = r.ReferenceNumber;
+    var style = CategoryStyles.For(r.Category.Name);
+    var photo = r.Attachments.FirstOrDefault();
+    var step = r.Status.StepIndex();
+    var complete = r.Status == ReportStatus.Resolved || r.Status == ReportStatus.Closed;
+    var stepNames = new[] { "Submitted", "Under Review", "Assigned", "In Progress", "Resolved" };
+    var backController = Model.IsManager ? "Facilities" : Model.IsAssignedTechnician ? "Facilities" : "Reports";
+    var backAction = Model.IsManager ? "Complaints" : Model.IsAssignedTechnician ? "Assigned" : "My";
+}
+
+<a class="back-link" asp-controller="@backController" asp-action="@backAction">
+    <svg class="icon"><use href="#i-chevron-left" /></svg> Back to reports
+</a>
+
+<div class="page-head">
+    <div class="d-flex align-items-center gap-3">
+        <span class="cat-icon cat-icon-lg @style.Css"><svg class="icon"><use href="#i-@style.Icon" /></svg></span>
+        <div>
+            <div class="report-ref">@r.ReferenceNumber</div>
+            <h1 class="mb-1">@r.ReportTitle()</h1>
+            <div class="d-flex gap-2 flex-wrap">
+                <partial name="_StatusBadge" model="r.Status" />
+                <partial name="_PriorityBadge" model="r.Priority" />
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CanUpdateStatus)
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#statusDrawer" aria-controls="statusDrawer">
+            <svg class="icon"><use href="#i-edit" /></svg> Update Status
+        </button>
+    }
+</div>
+
+@if (step >= 0)
+{
+    <ol class="steps" aria-label="Report progress">
+        @for (var i = 0; i < stepNames.Length; i++)
+        {
+            <li class="@(i < step || (complete && i == step) ? "done" : i == step ? "current" : "")" aria-current="@(i == step ? "step" : null)">
+                <span class="step-dot">@(i < step || (complete && i == step) ? "\u2713" : (i + 1).ToString())</span>
+                <span class="step-label">@stepNames[i]</span>
+            </li>
+        }
+    </ol>
+}
+else
+{
+    <div class="notice notice-danger" role="status">
+        <svg class="icon"><use href="#i-x" /></svg>
+        <div><strong>This report was cancelled.</strong> See the timeline for the reason.</div>
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <section class="card-app">
+            <h2 class="card-title">Description</h2>
+            <p class="prewrap">@r.Description</p>
+
+            @if (photo is not null)
+            {
+                <a href="@Url.Action("Get", "Attachments", new { id = photo.Id })" target="_blank" rel="noopener" class="photo-link">
+                    <img class="report-photo" src="@Url.Action("Get", "Attachments", new { id = photo.Id })" alt="Photo submitted with report @r.ReferenceNumber" />
+                </a>
+            }
+        </section>
+
+        <section class="card-app mt-3">
+            <h2 class="card-title">Timeline</h2>
+            <ol class="timeline">
+                @foreach (var item in Model.Timeline)
+                {
+                    <li class="tl-item tl-@item.Kind @(item.IsInternal ? "tl-internal" : "")">
+                        <span class="tl-dot" aria-hidden="true"></span>
+                        <div class="tl-body">
+                            <div class="tl-title">
+                                @item.Title
+                                @if (item.IsInternal)
+                                {
+                                    <span class="pill pill-internal">Internal</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(item.Text))
+                            {
+                                <p class="tl-text prewrap">@item.Text</p>
+                            }
+                            <div class="tl-meta">@item.Who &bull; @item.When.Sast()</div>
+                        </div>
+                    </li>
+                }
+            </ol>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="card-app">
+            <h2 class="card-title">Details</h2>
+            <dl class="detail-list">
+                @if (Model.IsStaffView)
+                {
+                    <div><dt>Reported by</dt><dd>@r.Reporter.DisplayName<br /><small class="muted">@r.Reporter.Email</small></dd></div>
+                }
+                <div><dt>Incident type</dt><dd>@r.Category.Name</dd></div>
+                <div><dt>Campus</dt><dd>@r.Location.Campus</dd></div>
+                <div><dt>Building / Area</dt><dd>@r.Location.Building</dd></div>
+                @if (!string.IsNullOrWhiteSpace(r.LocationDetail))
+                {
+                    <div><dt>Specific location</dt><dd>@r.LocationDetail</dd></div>
+                }
+                <div>
+                    <dt>Assigned to</dt>
+                    <dd>
+                        @if (r.AssignedTo is null) { <span class="muted">Not assigned yet</span> }
+                        else if (Model.IsStaffView) { @r.AssignedTo.DisplayName }
+                        else { <span>Maintenance team</span> }
+                    </dd>
+                </div>
+                <div><dt>Submitted</dt><dd>@r.CreatedAt.Sast()</dd></div>
+                <div><dt>Last updated</dt><dd>@r.UpdatedAt.Sast()</dd></div>
+                @if (r.ResolvedAt.HasValue)
+                {
+                    <div><dt>Resolved</dt><dd>@r.ResolvedAt.Sast()</dd></div>
+                }
+            </dl>
+        </section>
+
+        @if (Model.CanAssign)
+        {
+            <section class="card-app mt-3">
+                <h2 class="card-title">Assign technician</h2>
+                <form asp-controller="Facilities" asp-action="Assign" asp-route-id="@r.Id" method="post" data-submit-lock>
+                    <label class="form-label small" for="assigneeId">Technician</label>
+                    <select id="assigneeId" name="assigneeId" class="form-select mb-2" required>
+                        <option value="">Select technician</option>
+                        @foreach (var t in Model.Technicians)
+                        {
+                            <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary w-100">@(r.AssignedTo is null ? "Assign" : "Reassign")</button>
+                </form>
+            </section>
+        }
+
+        @if (Model.CanSetPriority)
+        {
+            <section class="card-app mt-3">
+                <h2 class="card-title">Priority</h2>
+                <form asp-controller="Facilities" asp-action="SetPriority" asp-route-id="@r.Id" method="post" data-submit-lock>
+                    <label class="form-label small" for="priority">Set priority</label>
+                    <select id="priority" name="priority" class="form-select mb-2">
+                        @foreach (var p in Enum.GetValues<ReportPriority>().Reverse())
+                        {
+                            <option value="@p" selected="@(p == r.Priority)">@p.Label()</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary w-100">Save priority</button>
+                </form>
+            </section>
+        }
+
+        @if (Model.CanAddNote)
+        {
+            <section class="card-app mt-3">
+                <h2 class="card-title">Add a note</h2>
+                <form asp-controller="Facilities" asp-action="AddNote" asp-route-id="@r.Id" method="post" data-submit-lock>
+                    <label class="form-label small" for="noteText">Note</label>
+                    <textarea id="noteText" name="text" class="form-control mb-2" rows="3" maxlength="1000" required></textarea>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="noteInternal" name="isInternal" value="true" />
+                        <label class="form-check-label" for="noteInternal">Internal note (hidden from the reporter)</label>
+                    </div>
+                    <button type="submit" class="btn btn-outline-secondary w-100">Add note</button>
+                </form>
+            </section>
+        }
+    </div>
+</div>
+
+@if (Model.CanUpdateStatus)
+{
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="statusDrawer" aria-labelledby="statusDrawerTitle" data-open-on-load="@(Model.OpenUpdatePanel ? "true" : "false")">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title h5" id="statusDrawerTitle">Update Incident Status</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="drawer-summary">
+                <span class="cat-icon @style.Css"><svg class="icon"><use href="#i-@style.Icon" /></svg></span>
+                <div>
+                    <strong>@r.ReferenceNumber</strong>
+                    <div class="muted small">@r.ReportTitle()</div>
+                </div>
+            </div>
+
+            @if (photo is not null)
+            {
+                <img class="drawer-photo" src="@Url.Action("Get", "Attachments", new { id = photo.Id })" alt="Photo submitted with the report" />
+            }
+
+            <form asp-controller="Facilities" asp-action="UpdateStatus" asp-route-id="@r.Id" method="post" data-submit-lock>
+                <div class="mb-3">
+                    <div class="form-label">Current status</div>
+                    <partial name="_StatusBadge" model="r.Status" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="newStatus">Change status to</label>
+                    <select id="newStatus" name="newStatus" class="form-select" required>
+                        <option value="">Select new status</option>
+                        @foreach (var s in Model.AllowedStatuses)
+                        {
+                            <option value="@s">@s.Label()</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="note">Update notes (optional)</label>
+                    <textarea id="note" name="note" class="form-control" rows="5" maxlength="500" data-counter="#noteCounter"
+                              placeholder="Add notes about the progress..."></textarea>
+                    <small class="muted d-block text-end" id="noteCounter" aria-live="polite">0/500</small>
+                    <div class="form-text">The reporter can see this note. A note is required to cancel a report.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Update Status</button>
+            </form>
+        </div>
+    </div>
+}

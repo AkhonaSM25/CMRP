@@ -1,0 +1,56 @@
+@model ReportListViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    var statusChips = new[] { ReportStatus.Submitted, ReportStatus.UnderReview, ReportStatus.Assigned, ReportStatus.InProgress, ReportStatus.Resolved, ReportStatus.Closed };
+}
+
+<div class="page-head">
+    <div>
+        <h1>@Model.Title</h1>
+        <p>@Model.Subtitle</p>
+    </div>
+    @if (Model.FormController == "Reports")
+    {
+        <a class="btn btn-primary" asp-controller="Reports" asp-action="Create">
+            <svg class="icon"><use href="#i-plus-circle" /></svg> Report an incident
+        </a>
+    }
+</div>
+
+<form method="get" asp-controller="@Model.FormController" asp-action="@Model.FormAction" class="search-bar" role="search">
+    <svg class="icon"><use href="#i-search" /></svg>
+    <input type="search" name="q" value="@Model.Search" placeholder="Search by reference number or description..." aria-label="Search by reference number or description" />
+    @if (Model.Status.HasValue)
+    {
+        <input type="hidden" name="status" value="@Model.Status" />
+    }
+</form>
+
+@if (Model.ShowStatusFilter)
+{
+    <div class="chips" role="navigation" aria-label="Filter by status">
+        <a class="chip @(Model.Status == null ? "active" : "")" asp-action="@Model.FormAction" asp-route-q="@Model.Search">All</a>
+        @foreach (var s in statusChips)
+        {
+            <a class="chip @(Model.Status == s ? "active" : "")" asp-action="@Model.FormAction" asp-route-status="@s" asp-route-q="@Model.Search">@s.Label()</a>
+        }
+    </div>
+}
+
+@if (Model.Reports.Count == 0)
+{
+    <div class="card-app empty-state">
+        <span class="empty-icon"><svg class="icon"><use href="#i-file-text" /></svg></span>
+        <h2 class="h5">@Model.EmptyTitle</h2>
+        <p class="muted">@(string.IsNullOrWhiteSpace(Model.Search) ? Model.EmptyText : "Nothing matches your search. Try a different reference number or keyword.")</p>
+    </div>
+}
+else
+{
+    <div class="report-list">
+        @foreach (var r in Model.Reports)
+        {
+            <partial name="_ReportCard" model="@(new ReportCardModel(r, Model.ShowProgress))" />
+        }
+    </div>
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CMRP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-body">
+    <partial name="_Icons" />
+    <div class="auth-shell">
+        <section class="auth-hero">
+            <a class="brand brand-light" href="/">
+                <span class="brand-mark"><svg class="icon"><use href="#i-tool" /></svg></span>
+                <span class="brand-text"><strong>CMRP</strong><small>University of KwaZulu-Natal</small></span>
+            </a>
+            <div class="auth-hero-copy">
+                <h2>A Safer UKZN Together</h2>
+                <p>Report incidents, track progress, and help make our campus safer.</p>
+            </div>
+        </section>
+
+        <main class="auth-panel" id="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

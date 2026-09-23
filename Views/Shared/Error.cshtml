@@ -1,0 +1,15 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+
+<div class="card-app empty-state">
+    <span class="empty-icon"><svg class="icon"><use href="#i-alert" /></svg></span>
+    <h1 class="h4">Something went wrong</h1>
+    <p class="muted">We could not complete that request. Please try again. If it keeps happening, tell the CMRP team.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="muted small">Request ID: <code>@Model.RequestId</code></p>
+    }
+    <a class="btn btn-primary" href="/">Go to home</a>
+</div>

@@ -1,0 +1,56 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Profile</h1>
+        <p>Your account details.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <section class="card-app">
+            <h2 class="card-title">Account</h2>
+            <form asp-action="Profile" method="post" data-submit-lock>
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full name</label>
+                    <input id="fullName" name="fullName" class="form-control" value="@Model.FullName" maxlength="100" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="email">Email address</label>
+                    <input id="email" class="form-control" value="@Model.Email" disabled />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="role">Role</label>
+                    <input id="role" class="form-control" value="@Model.Role" disabled />
+                    <div class="form-text">Roles are set by an administrator.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card-app">
+            <h2 class="card-title">Change password</h2>
+            <form asp-action="ChangePassword" method="post" data-submit-lock>
+                <div class="mb-3">
+                    <label for="CurrentPassword" class="form-label">Current password</label>
+                    <input id="CurrentPassword" name="CurrentPassword" type="password" class="form-control" autocomplete="current-password" required />
+                </div>
+                <div class="mb-3">
+                    <label for="NewPassword" class="form-label">New password</label>
+                    <input id="NewPassword" name="NewPassword" type="password" class="form-control" autocomplete="new-password" minlength="6" required />
+                </div>
+                <div class="mb-3">
+                    <label for="ConfirmNewPassword" class="form-label">Confirm new password</label>
+                    <input id="ConfirmNewPassword" name="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" required />
+                </div>
+                <button type="submit" class="btn btn-primary">Change password</button>
+            </form>
+        </section>
+    </div>
+</div>

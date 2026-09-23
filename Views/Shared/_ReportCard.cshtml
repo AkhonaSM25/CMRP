@@ -1,0 +1,30 @@
+@model ReportCardModel
+@{
+    var r = Model.Report;
+    var style = CategoryStyles.For(r.Category.Name);
+    var step = r.Status.StepIndex();
+    var complete = r.Status == ReportStatus.Resolved || r.Status == ReportStatus.Closed;
+    var stepNames = new[] { "Submitted", "Under Review", "Assigned", "In Progress", "Resolved" };
+}
+<a class="report-card" asp-controller="Reports" asp-action="Details" asp-route-id="@r.Id">
+    <span class="cat-icon @style.Css"><svg class="icon"><use href="#i-@style.Icon" /></svg></span>
+    <span class="report-card-main">
+        <span class="report-ref">@r.ReferenceNumber</span>
+        <span class="report-title">@r.ReportTitle()</span>
+        <span class="report-meta">@r.Location.Campus Campus &bull; @r.Location.Building</span>
+        <span class="report-meta">@r.CreatedAt.Sast()</span>
+        @if (Model.ShowProgress && step >= 0)
+        {
+            <span class="mini-steps" role="img" aria-label="Progress: step @(step + 1) of 5, @stepNames[step]">
+                @for (var i = 0; i < stepNames.Length; i++)
+                {
+                    <span class="@(i < step || (complete && i == step) ? "done" : i == step ? "current" : "")"></span>
+                }
+            </span>
+        }
+    </span>
+    <span class="report-card-side">
+        <partial name="_StatusBadge" model="r.Status" />
+        <svg class="icon chevron"><use href="#i-chevron-right" /></svg>
+    </span>
+</a>

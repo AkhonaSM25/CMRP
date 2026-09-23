@@ -1,0 +1,145 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var trendUp = "\u25B2";
+    var trendDown = "\u25BC";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Overview of incidents and system activity.</p>
+    </div>
+</div>
+
+@if (Model.AwaitingAssignment > 0)
+{
+    <div class="notice notice-warn" role="status">
+        <svg class="icon"><use href="#i-alert" /></svg>
+        <div>
+            <strong>@Model.AwaitingAssignment @(Model.AwaitingAssignment == 1 ? "report is" : "reports are") waiting to be assigned.</strong>
+            <a asp-action="Complaints" asp-route-unassigned="true" class="link-strong">Review them</a>
+        </div>
+    </div>
+}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <span class="stat-icon si-red"><svg class="icon"><use href="#i-alert" /></svg></span>
+        <div>
+            <div class="stat-label">Total Incidents</div>
+            <div class="stat-value">@Model.TotalIncidents</div>
+            @if (Model.TotalDeltaPercent is double t)
+            {
+                <div class="stat-delta">@(t >= 0 ? trendUp : trendDown) @Math.Abs(t)% vs previous 30 days</div>
+            }
+            else
+            {
+                <div class="stat-delta">Reported to date</div>
+            }
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon si-blue"><svg class="icon"><use href="#i-clock" /></svg></span>
+        <div>
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value">@Model.InProgress</div>
+            <div class="stat-delta">Being worked on now</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon si-green"><svg class="icon"><use href="#i-check-circle" /></svg></span>
+        <div>
+            <div class="stat-label">Resolved</div>
+            <div class="stat-value">@Model.Resolved</div>
+            @if (Model.ResolvedDeltaPercent is double d)
+            {
+                <div class="stat-delta @(d >= 0 ? "good" : "bad")">@(d >= 0 ? trendUp : trendDown) @Math.Abs(d)% vs previous 30 days</div>
+            }
+            else
+            {
+                <div class="stat-delta">Resolved or closed</div>
+            }
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon si-purple"><svg class="icon"><use href="#i-target" /></svg></span>
+        <div>
+            <div class="stat-label">Average Fix Time</div>
+            <div class="stat-value">@(Model.AverageFixDays.HasValue ? Model.AverageFixDays.Value.ToString("0.#") + " days" : "-")</div>
+            <div class="stat-delta">From report to resolved</div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <section class="card-app">
+        <h2 class="card-title">Most Frequently Reported Incidents</h2>
+        <partial name="_BarList" model="Model.TopCategories" />
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Incidents by Location</h2>
+        @if (Model.ByCampus.Count == 0)
+        {
+            <p class="muted mb-0">No data yet.</p>
+        }
+        else
+        {
+            <ul class="legend legend-wide">
+                @foreach (var c in Model.ByCampus)
+                {
+                    <li><span class="dot" style="background:@c.Color"></span><span class="legend-label">@c.Label</span><span class="legend-value">@c.Count (@c.SharePercent%)</span></li>
+                }
+            </ul>
+            <div class="stack-bar" role="img" aria-label="Share of incidents by campus">
+                @foreach (var c in Model.ByCampus.Where(c => c.Count > 0))
+                {
+                    <span style="width:@c.Share.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%;background:@c.Color"></span>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="card-app">
+        <h2 class="card-title">Average Time to Fix (Days)</h2>
+        <partial name="_FixTimeDonut" model="Model" />
+    </section>
+</div>
+
+<section class="card-app mt-3">
+    <div class="card-head">
+        <h2 class="card-title">Recent Complaints</h2>
+        <a class="link-strong" asp-action="Complaints">View all</a>
+    </div>
+
+    @if (Model.Recent.Count == 0)
+    {
+        <p class="muted mb-0">No complaints have been reported yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-app">
+                <thead>
+                    <tr><th scope="col">Ref #</th><th scope="col">Type</th><th scope="col">Location</th><th scope="col">Status</th><th scope="col">Date</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Recent)
+                    {
+                        <tr>
+                            <td><a asp-controller="Reports" asp-action="Details" asp-route-id="@r.Id" class="link-strong">@r.ReferenceNumber</a></td>
+                            <td>@r.Category.Name</td>
+                            <td>@r.Location.Building</td>
+                            <td><partial name="_StatusBadge" model="r.Status" /></td>
+                            <td>@r.CreatedAt.Sast("dd MMM")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

@@ -1,0 +1,26 @@
+@model MaintenanceReport
+@{
+    ViewData["Title"] = "Report submitted";
+}
+
+<div class="card-app confirm-card">
+    <span class="confirm-icon"><svg class="icon"><use href="#i-check-circle" /></svg></span>
+    <h1 class="h3">Report submitted</h1>
+    <p class="muted">Your report has been recorded. Keep your reference number to follow it up with facilities.</p>
+
+    <div class="reference-box" aria-label="Reference number">@Model.ReferenceNumber</div>
+
+    <dl class="detail-list detail-list-center">
+        <div><dt>Incident</dt><dd>@Model.ReportTitle()</dd></div>
+        <div><dt>Status</dt><dd><partial name="_StatusBadge" model="Model.Status" /></dd></div>
+        <div><dt>Submitted</dt><dd>@Model.CreatedAt.Sast()</dd></div>
+    </dl>
+
+    <p class="muted">A coordinator will review it and assign it to a technician. You can follow every step under Track Progress.</p>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <a class="btn btn-primary" asp-action="Details" asp-route-id="@Model.Id">View report</a>
+        <a class="btn btn-outline-secondary" asp-action="Track">Track progress</a>
+        <a class="btn btn-outline-secondary" asp-action="Create">Report another</a>
+    </div>
+</div>

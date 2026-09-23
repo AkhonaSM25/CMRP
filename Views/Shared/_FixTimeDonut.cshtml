@@ -1,0 +1,16 @@
+@model DashboardViewModel
+<div class="donut-wrap">
+    <div class="donut" style="background:conic-gradient(@Model.DonutGradient)" role="img"
+         aria-label="Average time to fix: @(Model.AverageFixDays.HasValue ? Model.AverageFixDays.Value.ToString("0.#") + " days" : "no resolved reports yet")">
+        <div class="donut-hole">
+            <strong>@(Model.AverageFixDays.HasValue ? Model.AverageFixDays.Value.ToString("0.#") : "-")</strong>
+            <small>Days</small>
+        </div>
+    </div>
+    <ul class="legend">
+        @foreach (var b in Model.FixTimeBuckets)
+        {
+            <li><span class="dot" style="background:@b.Color"></span><span class="legend-label">@b.Label</span><span class="legend-value">@b.SharePercent%</span></li>
+        }
+    </ul>
+</div>
