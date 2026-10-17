@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+CMRP.Tests/
+.git/
+.github/
+*.db
+*.db-shm
+*.db-wal
+App_Data/
+TestResults/
+coverage-report/

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: cmrp
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
