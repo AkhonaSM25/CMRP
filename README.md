@@ -3,7 +3,7 @@
 Software Engineering 2 (ENEL3SF), University of KwaZulu-Natal. Students and staff report campus maintenance problems;
 facilities staff triage, assign, fix and track them until closed.
 
-**Team:** Mokgoadi Gustave Saboshego, Akhona Mkhwanazi (Technical Lead / Integrator), Kakhele Hadebe, Nkosinathi Tsvuura
+**Team:** Mokgoadi Gustave Saboshego, Akhona Mkhwanazi (Technical Lead / Integrator), Zakhele Hadebe, Nkosinathi Tsvuura
 
 ## Features
 - Four roles: Reporter, Technician, Coordinator, Administrator (role comes from the account)
