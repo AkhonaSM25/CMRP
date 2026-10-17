@@ -59,9 +59,14 @@ public sealed class DatabaseAndSeedTests : IDisposable
     {
         var user = await _t.AddUserAsync("r@cmrp.test", Roles.Reporter);
         await _t.AddReportAsync(user.Id);
-        _t.Db.Categories.Remove(await _t.Db.Categories.SingleAsync());
+        var category = await _t.Db.Categories.SingleAsync();
 
-        var error = await Record.ExceptionAsync(() => _t.Db.SaveChangesAsync());
+        // EF may refuse at Remove() (the report is tracked) or at SaveChanges (the database FK is Restrict).
+        var error = await Record.ExceptionAsync(async () =>
+        {
+            _t.Db.Categories.Remove(category);
+            await _t.Db.SaveChangesAsync();
+        });
 
         Assert.NotNull(error);
         Assert.Equal(1, await _t.Db.Categories.AsNoTracking().CountAsync());
