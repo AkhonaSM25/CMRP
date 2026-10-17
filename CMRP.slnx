@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="CMRP.csproj" />
+  <Project Path="CMRP.Tests/CMRP.Tests.csproj" />
 </Solution>

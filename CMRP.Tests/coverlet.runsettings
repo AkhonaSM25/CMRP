@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Coverage is measured on the business-logic layer: services, models, view models and the seed routine.
+     Generated EF migrations and Razor views are excluded because they contain no hand-written logic. -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[CMRP]CMRP.Services.*,[CMRP]CMRP.Models.*,[CMRP]CMRP.ViewModels.*,[CMRP]CMRP.Data.SeedData*</Include>
+          <ExcludeByFile>**/Migrations/**</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

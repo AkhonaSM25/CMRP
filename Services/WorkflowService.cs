@@ -39,6 +39,12 @@ public class WorkflowService
         }
 
         note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        if (note is { Length: > 1000 })
+        {
+            // Same limit as AddNoteAsync, enforced here so the rule does not depend on the controller (DEF-01).
+            return OperationResult.Fail("Notes can be at most 1000 characters.");
+        }
+
         if (target == ReportStatus.Cancelled && note is null)
         {
             return OperationResult.Fail("Please add a note explaining why the report is being cancelled.");
@@ -101,6 +107,12 @@ public class WorkflowService
         if (assignee is null || !await _users.IsInRoleAsync(assignee, Roles.Technician))
         {
             return OperationResult.Fail("Please choose a technician.");
+        }
+
+        if (await _users.IsLockedOutAsync(assignee))
+        {
+            // A deactivated technician cannot sign in, so work assigned to them would never be seen (DEF-02).
+            return OperationResult.Fail($"{assignee.DisplayName}'s account is deactivated. Please choose another technician.");
         }
 
         if (report.AssignedToUserId == assignee.Id)

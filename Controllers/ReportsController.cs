@@ -145,7 +145,9 @@ public class ReportsController : Controller
         if (vm.CanAssign)
         {
             var technicians = await _users.GetUsersInRoleAsync(Roles.Technician);
+            // Deactivated accounts are left out of the list (DEF-02); the service also refuses them.
             vm.Technicians = technicians
+                .Where(t => !(t.LockoutEnd.HasValue && t.LockoutEnd.Value > DateTimeOffset.UtcNow))
                 .OrderBy(t => t.DisplayName)
                 .Select(t => new SelectListItem(t.DisplayName, t.Id, t.Id == report.AssignedToUserId))
                 .ToList();

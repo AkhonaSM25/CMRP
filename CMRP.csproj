@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,6 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-CMRP-167ff521-899c-4b26-95ae-251127002ba2</UserSecretsId>
   </PropertyGroup>
+
+  <!-- The test project lives in a sub-folder; keep its files out of the web project's build. -->
+  <ItemGroup>
+    <Compile Remove="CMRP.Tests/**" />
+    <Content Remove="CMRP.Tests/**" />
+    <EmbeddedResource Remove="CMRP.Tests/**" />
+    <None Remove="CMRP.Tests/**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.12" />

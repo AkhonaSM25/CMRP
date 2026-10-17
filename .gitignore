@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+## CMRP additions
+# SQLite database files and uploaded photos are runtime data, not source
+*.db
+*.db-shm
+*.db-wal
+App_Data/
+
+# Test output and coverage reports
+TestResults/
+coverage-report/
